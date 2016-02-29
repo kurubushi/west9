@@ -35,7 +35,7 @@ postOP env = PostOptions
      <> short 'r'
      <> metavar "INT"
      <> help "which TweetID in reply to"))
-    <*> option auto
+    <*> option str
       ( long "oauth"
      <> metavar "FILE"
      <> value ((askHomeDir env)++"/.west9/oauth.conf") --default
@@ -45,7 +45,7 @@ postOP env = PostOptions
 
 filterOP :: MyEnv -> Parser Options
 filterOP env = FilterOptions
-    <$> option auto
+    <$> option str
       ( long "oauth"
      <> metavar "FILE"
      <> value ((askHomeDir env)++"/.west9/oauth.conf") --default
@@ -55,7 +55,7 @@ filterOP env = FilterOptions
 
 timeLineOP :: MyEnv -> Parser Options
 timeLineOP env = TimeLineOptions
-    <$> option auto
+    <$> option str
       ( long "oauth"
      <> metavar "FILE"
      <> value ((askHomeDir env)++"/.west9/oauth.conf") --default
