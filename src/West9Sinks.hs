@@ -64,10 +64,11 @@ instance FromJSON TwitterUser
 watcher :: (MonadIO m, MonadThrow m) => Tweet -> m ()
 watcher tw = do
   liftM (fromMaybe ()) . runMaybeT $ do
+    let ids = id_str $ tw
     let user' = screen_name . user $ tw
     let text' = text $ tw
     let re' = id_str $ tw
-    liftIO $ T.putStrLn ("@"<>user'<>":\n"<>text')
+    liftIO $ T.putStrLn ("@"<>user'<>": "<>ids<>"\n"<>text')
     return ()
 
 takeTweetLoop :: (MonadIO m, MonadThrow m) => [Tweet -> m ()] -> Sink BS.ByteString m ()
