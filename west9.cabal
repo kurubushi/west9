@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     West9, West9Options
+  exposed-modules:     West9, West9Options, West9Sinks
   build-depends:       base >= 4.7 && < 5
                      , mtl >= 2.0 && < 3
                      , authenticate-oauth >= 1.5 && < 2
