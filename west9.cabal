@@ -3,8 +3,8 @@ version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
 homepage:            http://github.com/githubuser/west9#readme
-license:             BSD3
-license-file:        LICENSE
+--license:             BSD3
+--license-file:        LICENSE
 author:              Author name here
 maintainer:          example@example.com
 copyright:           2016 Author Here
@@ -41,15 +41,6 @@ library
 executable west9
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O3
-  build-depends:       base
-                     , west9
-                     , mtl >= 2.0 && < 3
-  default-language:    Haskell2010
-
-executable west9-test
-  hs-source-dirs:      app
-  main-is:             Test.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O3
   build-depends:       base
                      , west9
