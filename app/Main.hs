@@ -4,10 +4,6 @@ module Main where
 
 import West9 (tweetNow, tweetRep, ig, makeOAuthEnv, filterWatch, timeLineWatch)
 import West9Options (Options(..), getOptions)
-import System.IO (putStrLn,hFlush,stdout,appendFile)
-import System.Environment (getArgs)
-import Control.Monad (liftM)
-import Control.Exception (IOException,handle,displayException,SomeException)
 import Control.Monad.Reader (runReaderT)
 
 exec :: Options -> IO ()
@@ -30,6 +26,5 @@ exec (TimeLineOptions {..}) = do
 
 main ::  IO ()
 main = do
-  args <- getArgs
   opts <- getOptions
   exec opts

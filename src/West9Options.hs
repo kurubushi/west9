@@ -38,7 +38,7 @@ postOP env = PostOptions
     <*> option str
       ( long "oauth"
      <> metavar "FILE"
-     <> value ((askHomeDir env)++"/.west9/oauth.conf") --default
+     <> value (askHomeDir env ++ "/.west9/oauth.conf") --default
      <> help "OAuth config file")
     <*> argument str
       ( metavar "TEXT")
@@ -48,7 +48,7 @@ filterOP env = FilterOptions
     <$> option str
       ( long "oauth"
      <> metavar "FILE"
-     <> value ((askHomeDir env)++"/.west9/oauth.conf") --default
+     <> value (askHomeDir env ++ "/.west9/oauth.conf") --default
      <> help "OAuth config file")
     <*> some (argument str
       ( metavar "WORD..."))
@@ -58,7 +58,7 @@ timeLineOP env = TimeLineOptions
     <$> option str
       ( long "oauth"
      <> metavar "FILE"
-     <> value ((askHomeDir env)++"/.west9/oauth.conf") --default
+     <> value (askHomeDir env ++ "/.west9/oauth.conf") --default
      <> help "OAuth config file")
 
 allOptions :: MyEnv -> Parser Options

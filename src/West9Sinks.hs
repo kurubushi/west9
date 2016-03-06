@@ -62,8 +62,7 @@ instance FromJSON TwitterUser
 
 
 watcher :: (MonadIO m, MonadThrow m) => Tweet -> m ()
-watcher tw = do
-  liftM (fromMaybe ()) . runMaybeT $ do
+watcher tw = liftM (fromMaybe ()) . runMaybeT $ do
     let ids = id_str $ tw
     let user' = screen_name . user $ tw
     let text' = text $ tw

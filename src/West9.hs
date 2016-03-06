@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module West9 (
@@ -66,16 +65,14 @@ makeOAuthEnv file = do
   let oauthCS = forceEither $ get cp "OAuth" "ConsumerSecret"
   let credentialAT = forceEither $ get cp "Credential" "AccessToken"
   let credentialATS = forceEither $ get cp "Credential" "AccessTokenSecret"
-  let oauth = newOAuth {
+  let getOAuth = newOAuth {
     oauthRequestUri = "https://api.twitter.com/oauth/request_token",
     oauthAccessTokenUri = "https://api.twitter.com/oauth/access_token",
     oauthAuthorizeUri = "https://api.twitter.com/oauth/authorize",
     oauthConsumerKey = BS8.pack oauthCK,
     oauthConsumerSecret = BS8.pack oauthCS}
-  let credential = newCredential (BS8.pack credentialAT) (BS8.pack credentialATS)
-  return $ OAuthEnv {
-    getOAuth = oauth
-  , getCredential = credential}
+  let getCredential = newCredential (BS8.pack credentialAT) (BS8.pack credentialATS)
+  return OAuthEnv {..}
 
 parseUrlPost :: MonadThrow m => [(BS.ByteString,BS.ByteString)] -> String -> m Request
 parseUrlPost post = return . urlEncodedBody post <=< parseUrl
