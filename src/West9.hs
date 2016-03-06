@@ -33,7 +33,6 @@ import qualified Data.Conduit.Binary as CB
 import Data.Conduit (($$+-), Sink, ($$++), ($$+), newResumableSource, ResumableSource, await)
 import qualified Data.Conduit.List as CL
 import System.IO (putStrLn,hFlush,stdout,appendFile)
-import System.Environment (getArgs)
 import Control.Monad.Trans.Resource (runResourceT, ResourceT, MonadResource)
 import Data.Aeson (
   json, FromJSON, ToJSON, fromJSON, Result(..),
