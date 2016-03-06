@@ -112,7 +112,8 @@ filterWatch :: [String] -> ReaderT OAuthEnv IO ()
 filterWatch sts = runResourceT $ do
   req <- liftIO $ parseUrl . addFilterWords sts $
     "https://stream.twitter.com/1.1/statuses/filter.json" 
-  tweetGen req (takeTweetLoop [watcher])
+  tweetGen req (takeTweetLoop [flush watcher])
+  where flush = ((>> liftIO (hFlush stdout)) .)
 
 addFilterWords :: [String] -> URL -> URL
 addFilterWords sts url = url ++ "?track=" ++ sts'
@@ -122,7 +123,8 @@ timeLineWatch :: ReaderT OAuthEnv IO ()
 timeLineWatch = runResourceT $ do
   req <- liftIO $ parseUrl
     "https://userstream.twitter.com/2/user.json"
-  tweetGen req (takeTweetLoop [watcher])
+  tweetGen req (takeTweetLoop [flush watcher])
+  where flush = ((>> liftIO (hFlush stdout)) .)
 
 ig :: SomeException -> IO ()
 ig = putStrLn . displayException
