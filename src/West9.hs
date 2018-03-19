@@ -13,21 +13,23 @@ module West9 (
 , filterWatch
 , timeLineWatch
 , ig
+, kosaki
 ) where
 
-import West9Sinks (watcher, takeTweetLoop)
+import West9Sinks (watcher, takeTweetLoop, Tweet(..), TwitterUser(..))
 import Web.Authenticate.OAuth (signOAuth, OAuth(..), Credential(..), newOAuth, newCredential)
-import Data.Text (Text)
+import Data.Text (Text, isInfixOf)
 import Network.HTTP.Conduit (
   Request(..), urlEncodedBody, parseUrl, newManager, tlsManagerSettings, http, responseBody)
 import Control.Exception (IOException,handle,displayException,SomeException)
 import Control.Monad ((<=<),forever,liftM,guard,foldM)
+import Control.Applicative
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Maybe (runMaybeT,MaybeT(..))
 import Control.Monad.Reader
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Conduit.Binary as CB
 import Data.Conduit (($$+-), Sink, ($$++), ($$+), newResumableSource, ResumableSource, await)
 import qualified Data.Conduit.List as CL
@@ -49,6 +51,8 @@ import qualified Data.Text.Encoding as T
 import qualified Codec.Binary.UTF8.String as UTF8
 import Data.ConfigFile (readfile, emptyCP, get, ConfigParser(..))
 import Data.Either.Utils (forceEither)
+import Data.Time
+import Data.Function
 
 type URL = String
 type TweetID = Integer
@@ -122,5 +126,59 @@ timeLineWatch = runResourceT $ do
     "https://userstream.twitter.com/1.1/user.json"
   tweetGen req . takeTweetLoop . map flushingFunc $ [watcher]
 
+favoExec :: TweetID -> ReaderT OAuthEnv IO ()
+favoExec twid = runResourceT $ do
+  req <- liftIO $ parseUrlPost [("id", (BS8.pack . show) twid)]
+         "https://api.twitter.com/1.1/favorites/create.json"
+  tweetGen req CL.consume
+  return ()
+
+takeTweetFavo :: [Text] -> Tweet -> ReaderT OAuthEnv IO ()
+takeTweetFavo favoList tw = liftM (fromMaybe ()) . runMaybeT $ do
+  let user' = screen_name . user $ tw
+  let text' = text $ tw
+  let re' = id_num $ tw
+  guard $ retweeted_status tw == Nothing
+  guard $ any (`T.isInfixOf` text') favoList
+  liftIO $ T.putStrLn ("@"<>user'<>" "<>text')
+  lift $ favoExec re'
+  liftIO $ putStrLn ("\t==> favo!")
+  return ()
+
 ig :: SomeException -> IO ()
 ig = putStrLn . displayException
+
+kosaki :: String -> ReaderT OAuthEnv IO ()
+kosaki username = runResourceT $ do
+  req <- liftIO $ parseUrl
+    "https://userstream.twitter.com/1.1/user.json"
+  tweetGen req . takeTweetLoop . map flushingFunc . map (lift .)
+    $ [kosakiRep username]
+
+kosakiRep :: String -> Tweet -> ReaderT OAuthEnv IO ()
+kosakiRep username tw = liftM (fromMaybe ()) . runMaybeT $ do
+    let idn = id_num $ tw
+    let user' = screen_name . user $ tw
+    let text' = text $ tw
+    let retweeted_status' = retweeted_status $ tw
+    guard $ user' == (T.pack username)
+    guard $ isNothing retweeted_status'
+    isTarget text'
+    diff <- liftIO $ arekaraDay (fromGregorian 2016 9 21)
+    time <- liftIO $ fmap show getZonedTime
+    lift $ tweetRep
+      (    "@" <> username <> " マジカルパティシエ小咲ちゃんが終ってから"
+        <> show diff
+        <> "日が経ったよ．\n" <> time)
+      idn
+    liftIO $ T.putStrLn ("@"<>user'<>":\n"<>text')
+    return ()
+  where
+  isTarget text' = guard $
+       "kosaki" `T.isInfixOf` (T.toLower text')
+    || "小咲ちゃん" `T.isInfixOf` text'
+
+arekaraDay :: Day -> IO Integer
+arekaraDay day = do
+  now <- fmap (localDay . zonedTimeToLocalTime) $ getZonedTime
+  return $ now `diffDays` day

@@ -26,6 +26,9 @@ data Options = PostOptions {
 , optWords :: [String]
 } | TimeLineOptions {
   optConfigFilePath :: FilePath
+} | KosakiOptions {
+  optConfigFilePath :: FilePath
+, optUsername :: String
 } deriving (Show, Eq)
 
 postOP :: MyEnv -> Parser Options
@@ -61,6 +64,16 @@ timeLineOP env = TimeLineOptions
      <> value (askHomeDir env ++ "/.west9/oauth.conf") --default
      <> help "OAuth config file")
 
+kosakiOP :: MyEnv -> Parser Options
+kosakiOP env = KosakiOptions
+    <$> option str
+      ( long "oauth"
+     <> metavar "FILE"
+     <> value (askHomeDir env ++ "/.west9/oauth.conf") --default
+     <> help "OAuth config file")
+    <*> argument str
+      ( metavar "USERNAME")
+
 allOptions :: MyEnv -> Parser Options
 allOptions env = subparser $
     command "post" (info (postOP env)
@@ -69,6 +82,8 @@ allOptions env = subparser $
       (progDesc "Watch tweets filterd."))
  <> command "tl" (info (timeLineOP env)
       (progDesc "Watch your timeline."))
+ <> command "kosaki" (info (kosakiOP env)
+      (progDesc "Watch kosaki!"))
 
 addInfo :: (MyEnv -> Parser Options) -> (MyEnv -> ParserInfo Options)
 addInfo parser env = info

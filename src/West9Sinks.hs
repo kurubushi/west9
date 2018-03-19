@@ -5,7 +5,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module West9Sinks (
-  watcher
+  Tweet(..)
+, TwitterUser(..)
+, watcher
 , takeTweetLoop
 ) where
 
@@ -39,7 +41,8 @@ type URL = String
 type TweetID = Integer
 
 data Tweet = Tweet {
-  id_str :: Text
+  id_num :: Integer
+, id_str :: Text
 , text   :: Text
 , user   :: TwitterUser
 , retweeted_status :: Maybe Tweet
@@ -48,6 +51,7 @@ data Tweet = Tweet {
 
 instance FromJSON Tweet where
   parseJSON = withObject "tweet" $ \o -> do
+    id_num <- o .: "id"
     id_str <- o .: "id_str"
     text <- o .: "text"
     user <- o .: "user"

@@ -2,7 +2,7 @@
 
 module Main where
 
-import West9 (tweetNow, tweetRep, ig, makeOAuthEnv, filterWatch, timeLineWatch)
+import West9 (tweetNow, tweetRep, ig, makeOAuthEnv, filterWatch, timeLineWatch, kosaki)
 import West9Options (Options(..), getOptions)
 import Control.Monad.Reader (runReaderT)
 
@@ -23,6 +23,10 @@ exec (TimeLineOptions {..}) = do
   let (tw, oauthFilePath) = (optText, optConfigFilePath)
   oauthEnv <- makeOAuthEnv oauthFilePath
   runReaderT timeLineWatch oauthEnv
+exec (KosakiOptions {..}) = do
+  let (oauthFilePath, username) = (optConfigFilePath, optUsername)
+  oauthEnv <- makeOAuthEnv oauthFilePath
+  runReaderT (kosaki username) oauthEnv
 
 main ::  IO ()
 main = do

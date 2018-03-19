@@ -36,6 +36,7 @@ library
                      , MissingH
                      , optparse-applicative
                      , directory
+                     , time
   default-language:    Haskell2010
 
 executable west9
