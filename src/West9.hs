@@ -19,7 +19,7 @@ import West9Sinks (watcher, takeTweetLoop)
 import Web.Authenticate.OAuth (signOAuth, OAuth(..), Credential(..), newOAuth, newCredential)
 import Data.Text (Text)
 import Network.HTTP.Conduit (
-  Request(..), urlEncodedBody, parseUrl, newManager, conduitManagerSettings, http, responseBody)
+  Request(..), urlEncodedBody, parseUrl, newManager, tlsManagerSettings, http, responseBody)
 import Control.Exception (IOException,handle,displayException,SomeException)
 import Control.Monad ((<=<),forever,liftM,guard,foldM)
 import Control.Monad.Catch (MonadThrow)
@@ -82,7 +82,7 @@ tweetGen :: (MonadIO m, MonadThrow m, MonadResource m, MonadReader OAuthEnv m) =
 tweetGen req sink = do
   oauth <- liftM getOAuth $ ask
   credential <- liftM getCredential $ ask
-  manager <- liftIO $ newManager conduitManagerSettings
+  manager <- liftIO $ newManager tlsManagerSettings
   signedRequest <- signOAuth oauth credential req
   res <- http signedRequest manager
   responseBody res $$+- sink

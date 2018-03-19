@@ -1,14 +1,14 @@
 # For more information, see: http://docs.haskellstack.org/en/stable/yaml_configuration.html
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver: lts-5.2
+resolver: lts-6.1
 
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
-extra-deps: [attoparsec-conduit-1.1.0, aeson-0.11.0.0,fail-4.9.0.0]
+extra-deps: [attoparsec-conduit-1.1.0]
   # attoparsec-conduit: 単純にstackageにない．
   # aeson-0.11.0.0: https://github.com/bos/aeson/issues/325 が，解決してない
   #    fail : aesonからの依存
