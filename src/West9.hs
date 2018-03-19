@@ -119,7 +119,7 @@ addFilterWords sts url = url ++ "?track=" ++ sts'
 timeLineWatch :: ReaderT OAuthEnv IO ()
 timeLineWatch = runResourceT $ do
   req <- liftIO $ parseUrl
-    "https://userstream.twitter.com/2/user.json"
+    "https://userstream.twitter.com/1.1/user.json"
   tweetGen req . takeTweetLoop . map flushingFunc $ [watcher]
 
 ig :: SomeException -> IO ()
