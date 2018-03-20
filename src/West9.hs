@@ -13,7 +13,8 @@ module West9 (
 , filterWatch
 , timeLineWatch
 , ig
-, kosaki
+, getEndNotifyEnv
+, endNotify
 ) where
 
 import West9Sinks (watcher, takeTweetLoop, Tweet(..), TwitterUser(..))
@@ -49,16 +50,26 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
 import qualified Codec.Binary.UTF8.String as UTF8
-import Data.ConfigFile (readfile, emptyCP, get, ConfigParser(..))
+import Data.ConfigFile (readfile, emptyCP, get, ConfigParser(..), SectionSpec, sections)
 import Data.Either.Utils (forceEither)
 import Data.Time
 import Data.Function
+import Data.List.Split (endBy)
+import Data.List.Utils (replace)
 
 type URL = String
+type Username = String
 type TweetID = Integer
 data OAuthEnv = OAuthEnv {
   getOAuth :: OAuth
 , getCredential :: Credential
+}
+
+data EndNotify = EndNotify {
+  getEndUsers :: [Username]
+, getEndConds :: [String]
+, getEndRep :: String
+, getEndDay :: (Int,Int,Int)
 }
 
 makeOAuthEnv :: FilePath -> IO OAuthEnv
@@ -148,35 +159,48 @@ takeTweetFavo favoList tw = liftM (fromMaybe ()) . runMaybeT $ do
 ig :: SomeException -> IO ()
 ig = putStrLn . displayException
 
-kosaki :: String -> ReaderT OAuthEnv IO ()
-kosaki username = runResourceT $ do
+getEndN :: ConfigParser -> SectionSpec -> IO EndNotify
+getEndN cp sec = do
+  let users = endBy "," . forceEither $ get cp sec "Users"
+  let conds = endBy "," . forceEither $ get cp sec "Conds"
+  let st = forceEither $ get cp sec "Statement"
+  let year:mon:day:_ = map read . endBy "," . forceEither $ get cp sec "Day"
+  return EndNotify
+    {getEndUsers = users, getEndConds = conds, getEndRep = st, getEndDay = (year,mon,day)}
+
+getEndNotifyEnv :: FilePath -> IO [EndNotify]
+getEndNotifyEnv file = do
+  val <- readfile emptyCP{optionxform = id} file
+  let cp = forceEither val
+  mapM (getEndN cp) $ sections cp
+
+endNotify :: [EndNotify] -> ReaderT OAuthEnv IO ()
+endNotify ens = runResourceT $ do
   req <- liftIO $ parseUrl
     "https://userstream.twitter.com/1.1/user.json"
   tweetGen req . takeTweetLoop . map flushingFunc . map (lift .)
-    $ [kosakiRep username]
+    . map endNotifyRep $ ens
 
-kosakiRep :: String -> Tweet -> ReaderT OAuthEnv IO ()
-kosakiRep username tw = liftM (fromMaybe ()) . runMaybeT $ do
-    let idn = id_num $ tw
-    let user' = screen_name . user $ tw
-    let text' = text $ tw
-    let retweeted_status' = retweeted_status $ tw
-    guard $ user' == (T.pack username)
-    guard $ isNothing retweeted_status'
-    isTarget text'
-    diff <- liftIO $ arekaraDay (fromGregorian 2016 9 21)
-    time <- liftIO $ fmap show getZonedTime
-    lift $ tweetRep
-      (    "@" <> username <> " マジカルパティシエ小咲ちゃんが終ってから"
-        <> show diff
-        <> "日が経ったよ．\n" <> time)
-      idn
-    liftIO $ T.putStrLn ("@"<>user'<>":\n"<>text')
-    return ()
-  where
-  isTarget text' = guard $
-       "kosaki" `T.isInfixOf` (T.toLower text')
-    || "小咲ちゃん" `T.isInfixOf` text'
+endNotifyRep :: EndNotify -> Tweet -> ReaderT OAuthEnv IO ()
+endNotifyRep en tw = liftM (fromMaybe ()) . runMaybeT $ do
+  let idn = id_num $ tw
+  let user' = screen_name . user $ tw
+  let text' = text $ tw
+  let (year,mon,day) = getEndDay en
+  guard $ T.unpack user' `elem` getEndUsers en
+  guard $ isNothing . retweeted_status $ tw -- not Retweet
+  guard $ isNothing . in_reply_to_screen_name $ tw -- not Reply
+  guard $ any (flip T.isInfixOf text' . T.pack) $ getEndConds en
+  diff <- liftIO $ arekaraDay (fromGregorian (toInteger year) mon day)
+  time <- liftIO $ fmap show getZonedTime
+  lift $ tweetRep
+    (let username = T.unpack user' in
+     let statement = replace "<day>" (show diff) $ getEndRep en in
+     let timestamp = time in
+     "@" <> username <> " " <> statement <> " " <> timestamp)
+    idn
+  liftIO $ T.putStrLn ("@"<>user'<>":\n"<>text')
+  return ()
 
 arekaraDay :: Day -> IO Integer
 arekaraDay day = do

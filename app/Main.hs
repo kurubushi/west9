@@ -2,7 +2,7 @@
 
 module Main where
 
-import West9 (tweetNow, tweetRep, ig, makeOAuthEnv, filterWatch, timeLineWatch, kosaki)
+import West9 (tweetNow, tweetRep, ig, makeOAuthEnv, filterWatch, timeLineWatch, kosaki, getEndNotifyEnv, endNotify)
 import West9Options (Options(..), getOptions)
 import Control.Monad.Reader (runReaderT)
 
@@ -27,6 +27,11 @@ exec (KosakiOptions {..}) = do
   let (oauthFilePath, username) = (optConfigFilePath, optUsername)
   oauthEnv <- makeOAuthEnv oauthFilePath
   runReaderT (kosaki username) oauthEnv
+exec (EndNotifyOptions {..}) = do
+  let (oauthFilePath, endNotifyFilePath) = (optConfigFilePath, optEndNotifyFilePath)
+  oauthEnv <- makeOAuthEnv oauthFilePath
+  endNotifyEnv <- getEndNotifyEnv endNotifyFilePath
+  runReaderT (endNotify endNotifyEnv) oauthEnv
 
 main ::  IO ()
 main = do

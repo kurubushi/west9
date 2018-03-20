@@ -26,9 +26,9 @@ data Options = PostOptions {
 , optWords :: [String]
 } | TimeLineOptions {
   optConfigFilePath :: FilePath
-} | KosakiOptions {
+} | EndNotifyOptions {
   optConfigFilePath :: FilePath
-, optUsername :: String
+, optEndNotifyFilePath :: FilePath
 } deriving (Show, Eq)
 
 postOP :: MyEnv -> Parser Options
@@ -64,15 +64,18 @@ timeLineOP env = TimeLineOptions
      <> value (askHomeDir env ++ "/.west9/oauth.conf") --default
      <> help "OAuth config file")
 
-kosakiOP :: MyEnv -> Parser Options
-kosakiOP env = KosakiOptions
+endNotifyOP :: MyEnv -> Parser Options
+endNotifyOP env = EndNotifyOptions
     <$> option str
       ( long "oauth"
      <> metavar "FILE"
      <> value (askHomeDir env ++ "/.west9/oauth.conf") --default
      <> help "OAuth config file")
-    <*> argument str
-      ( metavar "USERNAME")
+    <*> option str
+      ( long "endnotify"
+     <> metavar "FILE"
+     <> value (askHomeDir env ++ "/.west9/endnotify.conf") --default
+     <> help "EndNotify config file")
 
 allOptions :: MyEnv -> Parser Options
 allOptions env = subparser $
@@ -82,8 +85,8 @@ allOptions env = subparser $
       (progDesc "Watch tweets filterd."))
  <> command "tl" (info (timeLineOP env)
       (progDesc "Watch your timeline."))
- <> command "kosaki" (info (kosakiOP env)
-      (progDesc "Watch kosaki!"))
+ <> command "endnotify" (info (endNotifyOP env)
+      (progDesc "Notify how many days passed since the end."))
 
 addInfo :: (MyEnv -> Parser Options) -> (MyEnv -> ParserInfo Options)
 addInfo parser env = info
